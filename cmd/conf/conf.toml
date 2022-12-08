@@ -1,0 +1,8 @@
+[Logger]
+LogLevel = "debug"
+FilePath = "logs/demo.log"
+
+[Config]
+Name = "Demo"
+Addr = "127.0.0.1"
+Port = 8888
