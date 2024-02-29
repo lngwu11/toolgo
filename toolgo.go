@@ -20,10 +20,9 @@ type Conf struct {
 
 type LoggerConf struct {
 	LogLevel         string
-	IsWriteFile      bool
+	FilePath         string
 	FileMaxAge       int // 文件最大保存时间（天）
 	FileRotationTime int // 日志切割时间间隔（小时）
-	FilePath         string
 }
 
 type ConfigFileConf struct {
@@ -32,11 +31,10 @@ type ConfigFileConf struct {
 
 var defaultConf = Conf{
 	Logger: LoggerConf{
-		LogLevel:         "WARNING",
-		IsWriteFile:      true,
-		FileMaxAge:       7,
-		FileRotationTime: 24,
+		LogLevel:         "ERROR",
 		FilePath:         "logs/toolgo.log",
+		FileMaxAge:       30,
+		FileRotationTime: 24,
 	},
 	ConfigFile: ConfigFileConf{
 		FilePath: "conf/conf.toml",
@@ -74,8 +72,8 @@ func initLog() (err error) {
 		return
 	}
 
-	if cfg.Logger.IsWriteFile {
-		filePath := cfg.Logger.FilePath
+	filePath := cfg.Logger.FilePath
+	if filePath != "" {
 		//获取文件后缀
 		fileSuffix := path.Ext(filePath)
 		//获取不带后缀的文件名
@@ -94,8 +92,7 @@ func initLog() (err error) {
 			return
 		}
 	}
-	err = loggo.ConfigureLoggers(cfg.Logger.LogLevel)
-	return
+	return loggo.ConfigureLoggers(cfg.Logger.LogLevel)
 }
 
 func initConf(c *Conf) (err error) {
@@ -125,6 +122,31 @@ func init() {
 	_ = initConf(cfg)
 }
 
+// Deprecated: use Default instead
 func GetDefaultConf() *Conf {
 	return cfg
+}
+
+func Default() *Conf {
+	return cfg
+}
+
+func InitLog(level, filePath string) (err error) {
+	loggo.ResetLogging()
+	err = loggo.RegisterWriter(os.Stdout.Name(), loggo.NewSimpleWriter(os.Stdout, nil))
+	if err != nil {
+		return
+	}
+	if filePath != "" {
+		var w loggo.Writer
+		w, err = loggo.NewLogFileWriter(filePath, 0644, nil)
+		if err != nil {
+			return
+		}
+		err = loggo.RegisterWriter(path.Base(filePath), w)
+		if err != nil {
+			return
+		}
+	}
+	return loggo.ConfigureLoggers(level)
 }

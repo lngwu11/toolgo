@@ -18,7 +18,7 @@ type DemoConfig struct {
 var demoConfig DemoConfig
 
 func main() {
-	toolgo.GetDefaultConf().
+	toolgo.Default().
 		SetConfigFilePath("conf/conf.toml").
 		SetConfig(&demoConfig).
 		Init()
